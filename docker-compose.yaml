@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  calorie-counter:
+    build: .
+    container_name: calorie-counter-app
+    ports:
+      - "8080:8080"
+    environment:
+      # These variables are read from your shell or a .env file.
+      # Create a .env file in the same directory as this docker-compose.yaml
+      # with the following content:
+      #
+      # CALORIE_NINJAS_API_KEY=your_calorie_ninjas_api_key
+      # GEMINI_API_KEY=your_gemini_api_key
+      # TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+      #
+      - CALORIE_NINJAS_API_KEY=${CALORIE_NINJAS_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    restart: unless-stopped

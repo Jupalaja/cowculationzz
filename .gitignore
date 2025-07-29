@@ -42,5 +42,8 @@ out/
 ### AIPack
 .aipack
 
+### Environment variables
+.env
+
 
 
