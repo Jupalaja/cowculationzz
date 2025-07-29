@@ -1,7 +1,7 @@
 package com.jupalaja.calorieCounter.services
 
 import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
-import com.jupalaja.calorieCounter.infra.output.ports.CalorieNinjasPort
+import com.jupalaja.calorieCounter.infra.output.ports.calorieNinjas.CalorieNinjasPort
 import org.springframework.stereotype.Service
 
 

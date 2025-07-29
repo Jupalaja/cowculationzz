@@ -1,12 +1,11 @@
-package com.jupalaja.calorieCounter.infra.output.adapters
+package com.jupalaja.calorieCounter.infra.output.adapters.calorieNinjas
 
 import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
-import com.jupalaja.calorieCounter.infra.output.ports.CalorieNinjasPort
+import com.jupalaja.calorieCounter.infra.output.ports.calorieNinjas.CalorieNinjasPort
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
-
 
 @Component
 class CalorieNinjasAdapter(

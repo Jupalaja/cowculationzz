@@ -1,4 +1,4 @@
-package com.jupalaja.calorieCounter.infra.output.ports
+package com.jupalaja.calorieCounter.infra.output.ports.calorieNinjas
 
 import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
 
