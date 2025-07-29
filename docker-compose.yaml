@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   calorie-counter:
     build: .
@@ -15,7 +13,7 @@ services:
       # GEMINI_API_KEY=your_gemini_api_key
       # TELEGRAM_BOT_TOKEN=your_telegram_bot_token
       #
-      - CALORIE_NINJAS_API_KEY=${CALORIE_NINJAS_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - CALORIE_NINJAS_API_KEY=${CALORIE_NINJAS_API_KEY:?CALORIE_NINJAS_API_KEY is not set. See comments in docker-compose.yaml for instructions.}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:?GEMINI_API_KEY is not set. See comments in docker-compose.yaml for instructions.}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN is not set. See comments in docker-compose.yaml for instructions.}
     restart: unless-stopped

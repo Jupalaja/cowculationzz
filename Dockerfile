@@ -10,6 +10,10 @@ WORKDIR /workspace/app
 # Copy the build configuration file.
 COPY build.gradle.kts ./
 
+# Download dependencies to leverage Docker layer caching.
+# This step will be cached as long as build.gradle.kts does not change.
+RUN gradle dependencies --no-daemon
+
 # Copy the source code.
 COPY src ./src
 
