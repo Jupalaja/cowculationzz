@@ -4,6 +4,8 @@ import com.google.genai.Client
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 @Service
 class GeminiService(
@@ -12,7 +14,7 @@ class GeminiService(
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    private val promptTemplate = """
+    private val naturalLanguageQueryPromptTemplate = """
         Summarize the following user request into a simple query in English for a nutrition API.
         The user wants to know the nutritional information of some food.
         Extract the food items and quantities, and translate them to English.
@@ -23,12 +25,20 @@ class GeminiService(
         The user request is: "%s"
     """.trimIndent()
 
+    private val proteinSummaryPromptTemplate = """
+        Generate a sentence in Spanish that says 'In total you would be consuming Xg of protein'.
+        Replace X with the provided value: %s.
+        If the value is 0, say something like 'Los alimentos que proporcionaste no parecen contener proteínas.'
+        Only return the final sentence, with no other text, explanation, or formatting.
+        For example, if the value is 25.5, the output should be 'En total estarías consumiendo 25.5g de proteína'.
+    """.trimIndent()
+
     fun getQueryFromNaturalLanguage(naturalLanguageQuery: String): String {
         logger.info("[GET_QUERY_FROM_NATURAL_LANGUAGE] Processing natural language query: {}", naturalLanguageQuery)
         if (naturalLanguageQuery.isBlank()) {
             throw IllegalArgumentException("Query cannot be blank.")
         }
-        val prompt = promptTemplate.format(naturalLanguageQuery)
+        val prompt = naturalLanguageQueryPromptTemplate.format(naturalLanguageQuery)
 
         return try {
             val response = geminiClient.models.generateContent(modelName, prompt, null)
@@ -41,6 +51,29 @@ class GeminiService(
         } catch (e: Exception) {
             logger.error("[GET_QUERY_FROM_NATURAL_LANGUAGE] Error communicating with Gemini API", e)
             throw RuntimeException("Error processing natural language query with Gemini API.", e)
+        }
+    }
+
+    fun getProteinSummaryInSpanish(proteinAmount: Double): String {
+        logger.info("[GET_PROTEIN_SUMMARY_IN_SPANISH] Generating summary for protein amount: {}", proteinAmount)
+
+        val df = DecimalFormat("#.#")
+        df.roundingMode = RoundingMode.HALF_UP
+        val formattedProteinAmount = df.format(proteinAmount)
+
+        val prompt = proteinSummaryPromptTemplate.format(formattedProteinAmount)
+
+        return try {
+            val response = geminiClient.models.generateContent(modelName, prompt, null)
+            val summary = response.text()?.trim()
+            logger.info("[GET_PROTEIN_SUMMARY_IN_SPANISH] Generated summary from Gemini: {}", summary)
+            if (summary.isNullOrBlank()) {
+                throw IllegalStateException("Gemini API returned an empty or null response for protein summary.")
+            }
+            summary
+        } catch (e: Exception) {
+            logger.error("[GET_PROTEIN_SUMMARY_IN_SPANISH] Error communicating with Gemini API", e)
+            throw RuntimeException("Error generating protein summary with Gemini API.", e)
         }
     }
 }
