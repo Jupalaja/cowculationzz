@@ -17,7 +17,8 @@ class GeminiService(
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    private val naturalLanguageQueryPromptTemplate = """
+    private val naturalLanguageQueryPromptTemplate =
+        """
         Summarize the following user request into a simple query in English for a nutrition API.
         The user wants to know the nutritional information of some food.
         Extract the food items and quantities, and translate them to English.
@@ -26,9 +27,10 @@ class GeminiService(
         Another example, if the user asks 'me comi un pan grande, de media libra', the output should be 'half a pound of large bread'.
         Only return the query, with no other text, explanation, or formatting.
         The user request is: "%s"
-    """.trimIndent()
+        """.trimIndent()
 
-    private val proteinSummaryPromptTemplate = """
+    private val proteinSummaryPromptTemplate =
+        """
         Generate a summary in Spanish for the provided list of foods and their protein content.
         The summary should start with "Claro, éste es el resumen".
         Then, list each food item with its protein content on a new line, using a bullet point. For example: "- La pechuga de pollo contiene 50g de proteína".
@@ -43,7 +45,7 @@ class GeminiService(
         The total protein is %sg.
 
         Only return the final formatted text. Do not add any other explanations or formatting.
-    """.trimIndent()
+        """.trimIndent()
 
     fun getQueryFromNaturalLanguage(naturalLanguageQuery: String): String {
         logger.info("[GET_QUERY_FROM_NATURAL_LANGUAGE] Processing natural language query: {}", naturalLanguageQuery)
@@ -79,9 +81,10 @@ class GeminiService(
         df.roundingMode = RoundingMode.HALF_UP
         val formattedTotalProtein = df.format(totalProtein)
 
-        val itemsListString = nutritionData.items.joinToString("\n") {
-            "Item: ${it.name}, Protein: ${df.format(it.proteinG)}g"
-        }
+        val itemsListString =
+            nutritionData.items.joinToString("\n") {
+                "Item: ${it.name}, Protein: ${df.format(it.proteinG)}g"
+            }
 
         val prompt = proteinSummaryPromptTemplate.format(itemsListString, formattedTotalProtein)
 
@@ -99,7 +102,10 @@ class GeminiService(
         }
     }
 
-    fun getTextFromAudio(audioBytes: ByteArray, mimeType: String): String {
+    fun getTextFromAudio(
+        audioBytes: ByteArray,
+        mimeType: String,
+    ): String {
         logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio of size: ${audioBytes.size} bytes and mimeType: $mimeType")
         if (audioBytes.isEmpty()) {
             throw IllegalArgumentException("Audio bytes cannot be empty.")

@@ -10,7 +10,5 @@ class GeminiConfig(
     @Value("\${api.gemini.key}") private val apiKey: String,
 ) {
     @Bean
-    fun geminiClient(): Client {
-        return Client.builder().apiKey(apiKey).build()
-    }
+    fun geminiClient(): Client = Client.builder().apiKey(apiKey).build()
 }

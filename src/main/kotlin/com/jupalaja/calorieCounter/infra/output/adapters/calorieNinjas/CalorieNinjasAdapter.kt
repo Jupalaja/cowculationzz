@@ -9,22 +9,21 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Component
 class CalorieNinjasAdapter(
-    private val calorieNinjasWebClient: WebClient
+    private val calorieNinjasWebClient: WebClient,
 ) : CalorieNinjasPort {
-
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     override fun getNutritionInfo(query: String): NutritionResponseDTO {
         logger.info("[GET_NUTRITION_INFO] Getting nutrition info for query: {}", query)
         return try {
-            calorieNinjasWebClient.get()
+            calorieNinjasWebClient
+                .get()
                 .uri { uriBuilder ->
                     uriBuilder
                         .path("nutrition")
                         .queryParam("query", query)
                         .build()
-                }
-                .retrieve()
+                }.retrieve()
                 .bodyToMono<NutritionResponseDTO>()
                 .block() ?: throw IllegalStateException("API returned empty body")
         } catch (e: Exception) {

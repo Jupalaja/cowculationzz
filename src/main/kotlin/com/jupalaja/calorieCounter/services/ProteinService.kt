@@ -4,10 +4,9 @@ import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
 import com.jupalaja.calorieCounter.infra.output.ports.calorieNinjas.CalorieNinjasPort
 import org.springframework.stereotype.Service
 
-
 @Service
 class ProteinService(
-    private val calorieNinjasPort: CalorieNinjasPort
+    private val calorieNinjasPort: CalorieNinjasPort,
 ) {
     fun getTotalProtein(query: String): NutritionResponseDTO {
         if (query.isBlank()) {

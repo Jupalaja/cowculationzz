@@ -6,10 +6,8 @@ import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 class CalorieCounterApplicationTests {
-
-	@Test
-	@Disabled("Skipping tests for now")
-	fun contextLoads() {
-	}
-
+    @Test
+    @Disabled("Skipping tests for now")
+    fun contextLoads() {
+    }
 }

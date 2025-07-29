@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class CalorieCounterApplication
 
 fun main(args: Array<String>) {
-	runApplication<CalorieCounterApplication>(*args)
+    runApplication<CalorieCounterApplication>(*args)
 }
