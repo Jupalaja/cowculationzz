@@ -69,6 +69,10 @@ class GeminiService(
     fun getProteinSummary(nutritionData: NutritionResponseDTO): String {
         logger.info("[GET_PROTEIN_SUMMARY] Generating summary for nutrition data: {}", nutritionData)
 
+        if (nutritionData.items.isEmpty()) {
+            return "Alimento no encontrado en la base de datos"
+        }
+
         val totalProtein = nutritionData.items.sumOf { it.proteinG }
 
         val df = DecimalFormat("#.#")
