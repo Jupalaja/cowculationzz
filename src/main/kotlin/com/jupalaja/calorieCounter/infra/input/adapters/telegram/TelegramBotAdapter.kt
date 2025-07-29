@@ -40,8 +40,8 @@ class TelegramBotAdapter(
                 text {
                     try {
                         val processedQuery = geminiService.getQueryFromNaturalLanguage(text)
-                        val totalProtein = proteinService.getTotalProtein(processedQuery)
-                        val responseText = geminiService.getProteinSummary(totalProtein)
+                        val nutritionData = proteinService.getTotalProtein(processedQuery)
+                        val responseText = geminiService.getProteinSummary(nutritionData)
                         bot.sendMessage(chatId = ChatId.fromId(message.chat.id), text = responseText)
                     } catch (e: Exception) {
                         logger.error("Error processing message: '$text'", e)
@@ -56,8 +56,8 @@ class TelegramBotAdapter(
                         if (fileBytes != null) {
                             val transcribedText = geminiService.getTextFromAudio(fileBytes, mimeType)
                             val processedQuery = geminiService.getQueryFromNaturalLanguage(transcribedText)
-                            val totalProtein = proteinService.getTotalProtein(processedQuery)
-                            val responseText = geminiService.getProteinSummary(totalProtein)
+                            val nutritionData = proteinService.getTotalProtein(processedQuery)
+                            val responseText = geminiService.getProteinSummary(nutritionData)
                             bot.sendMessage(chatId = ChatId.fromId(message.chat.id), text = responseText)
                         } else {
                             logger.error("Failed to download voice message with fileId: $voiceFileId")

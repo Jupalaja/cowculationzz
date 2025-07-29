@@ -3,6 +3,7 @@ package com.jupalaja.calorieCounter.services
 import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.Part
+import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -28,11 +29,20 @@ class GeminiService(
     """.trimIndent()
 
     private val proteinSummaryPromptTemplate = """
-        Generate a sentence in Spanish that says 'In total you would be consuming Xg of protein'.
-        Replace X with the provided value: %s.
-        If the value is 0, say something like 'Los alimentos que proporcionaste no parecen contener proteínas.'
-        Only return the final sentence, with no other text, explanation, or formatting.
-        For example, if the value is 25.5, the output should be 'En total estarías consumiendo 25.5g de proteína'.
+        Generate a summary in Spanish for the provided list of foods and their protein content.
+        The summary should start with "Claro, éste es el resumen".
+        Then, list each food item with its protein content on a new line, using a bullet point. For example: "- La pechuga de pollo contiene 50g de proteína".
+        After the list, add a blank line.
+        Finally, add a sentence with the total protein amount. For example: "En total estarías consumiendo 60g de proteína".
+
+        If the list of items is empty or the total protein is 0, the response should be "Los alimentos que proporcionaste no parecen contener proteínas."
+
+        Here is the list of food items and their protein content:
+        %s
+
+        The total protein is %sg.
+
+        Only return the final formatted text. Do not add any other explanations or formatting.
     """.trimIndent()
 
     fun getQueryFromNaturalLanguage(naturalLanguageQuery: String): String {
@@ -56,14 +66,20 @@ class GeminiService(
         }
     }
 
-    fun getProteinSummary(proteinAmount: Double): String {
-        logger.info("[GET_PROTEIN_SUMMARY] Generating summary for protein amount: {}", proteinAmount)
+    fun getProteinSummary(nutritionData: NutritionResponseDTO): String {
+        logger.info("[GET_PROTEIN_SUMMARY] Generating summary for nutrition data: {}", nutritionData)
+
+        val totalProtein = nutritionData.items.sumOf { it.proteinG }
 
         val df = DecimalFormat("#.#")
         df.roundingMode = RoundingMode.HALF_UP
-        val formattedProteinAmount = df.format(proteinAmount)
+        val formattedTotalProtein = df.format(totalProtein)
 
-        val prompt = proteinSummaryPromptTemplate.format(formattedProteinAmount)
+        val itemsListString = nutritionData.items.joinToString("\n") {
+            "Item: ${it.name}, Protein: ${df.format(it.proteinG)}g"
+        }
+
+        val prompt = proteinSummaryPromptTemplate.format(itemsListString, formattedTotalProtein)
 
         return try {
             val response = geminiClient.models.generateContent(modelName, prompt, null)

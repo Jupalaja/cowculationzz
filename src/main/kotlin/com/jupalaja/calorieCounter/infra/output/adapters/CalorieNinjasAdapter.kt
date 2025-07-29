@@ -1,6 +1,6 @@
 package com.jupalaja.calorieCounter.infra.output.adapters
 
-import com.jupalaja.calorieCounter.domain.dtos.calorieNinjas.NutritionResponseDTO
+import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
 import com.jupalaja.calorieCounter.infra.output.ports.CalorieNinjasPort
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component

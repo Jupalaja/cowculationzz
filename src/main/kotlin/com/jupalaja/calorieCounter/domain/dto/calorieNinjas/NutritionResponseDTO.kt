@@ -1,7 +1,11 @@
-package com.jupalaja.calorieCounter.domain.dtos.calorieNinjas
+package com.jupalaja.calorieCounter.domain.dto.calorieNinjas
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
+
+data class NutritionResponseDTO(
+    val items: List<NutritionInfoDTO>
+)
 
 data class NutritionInfoDTO(
     @JsonProperty("sugar_g")
