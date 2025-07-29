@@ -1,7 +1,7 @@
 package com.jupalaja.calorieCounter.infra.output.adapters.gemini
 
 import com.google.genai.Client
-import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
+import com.jupalaja.calorieCounter.domain.dto.NutritionResponseDTO
 import com.jupalaja.calorieCounter.infra.output.ports.NaturalLanguageProcessingPort
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

@@ -3,7 +3,7 @@ package com.jupalaja.calorieCounter.infra.output.adapters.gemini
 import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.Part
-import com.jupalaja.calorieCounter.infra.input.ports.AudioProcessingPort
+import com.jupalaja.calorieCounter.infra.input.ports.AudioProcessingInputPort
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -12,10 +12,13 @@ import org.springframework.stereotype.Component
 class GeminiAudioAdapter(
     @Value("\${api.gemini.model}") private val modelName: String,
     private val geminiClient: Client,
-) : AudioProcessingPort {
+) : AudioProcessingInputPort {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    override fun transcribeAudio(audioBytes: ByteArray, mimeType: String): String {
+    override fun transcribeAudio(
+        audioBytes: ByteArray,
+        mimeType: String,
+    ): String {
         logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio of size: ${audioBytes.size} bytes and mimeType: $mimeType")
         if (audioBytes.isEmpty()) {
             throw IllegalArgumentException("Audio bytes cannot be empty.")

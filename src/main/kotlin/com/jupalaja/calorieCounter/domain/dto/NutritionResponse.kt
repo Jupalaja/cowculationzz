@@ -1,4 +1,4 @@
-package com.jupalaja.calorieCounter.domain.dto.calorieNinjas
+package com.jupalaja.calorieCounter.domain.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

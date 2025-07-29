@@ -3,7 +3,7 @@ package com.jupalaja.calorieCounter.services
 import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.Part
-import com.jupalaja.calorieCounter.domain.dto.calorieNinjas.NutritionResponseDTO
+import com.jupalaja.calorieCounter.domain.dto.NutritionResponseDTO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
