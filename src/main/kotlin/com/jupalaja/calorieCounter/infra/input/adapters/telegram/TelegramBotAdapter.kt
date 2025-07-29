@@ -4,6 +4,7 @@ import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.text
+import com.github.kotlintelegrambot.dispatcher.voice
 import com.github.kotlintelegrambot.entities.ChatId
 import com.jupalaja.calorieCounter.services.GeminiService
 import com.jupalaja.calorieCounter.services.ProteinService
@@ -45,6 +46,26 @@ class TelegramBotAdapter(
                     } catch (e: Exception) {
                         logger.error("Error processing message: '$text'", e)
                         bot.sendMessage(chatId = ChatId.fromId(message.chat.id), text = "Sorry, an error occurred while processing your request.")
+                    }
+                }
+                voice {
+                    try {
+                        val voiceFileId = media.fileId
+                        val mimeType = media.mimeType ?: "audio/ogg"
+                        val fileBytes = bot.downloadFileBytes(voiceFileId)
+                        if (fileBytes != null) {
+                            val transcribedText = geminiService.getTextFromAudio(fileBytes, mimeType)
+                            val processedQuery = geminiService.getQueryFromNaturalLanguage(transcribedText)
+                            val totalProtein = proteinService.getTotalProtein(processedQuery)
+                            val responseText = geminiService.getProteinSummaryInSpanish(totalProtein)
+                            bot.sendMessage(chatId = ChatId.fromId(message.chat.id), text = responseText)
+                        } else {
+                            logger.error("Failed to download voice message with fileId: $voiceFileId")
+                            bot.sendMessage(chatId = ChatId.fromId(message.chat.id), text = "Sorry, I couldn't process your voice message.")
+                        }
+                    } catch (e: Exception) {
+                        logger.error("Error processing voice message", e)
+                        bot.sendMessage(chatId = ChatId.fromId(message.chat.id), text = "Sorry, an error occurred while processing your voice message.")
                     }
                 }
             }
