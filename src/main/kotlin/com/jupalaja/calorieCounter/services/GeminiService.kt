@@ -1,9 +1,11 @@
 package com.jupalaja.calorieCounter.services
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.Part
-import com.jupalaja.calorieCounter.domain.dto.NutritionResponseDTO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -14,6 +16,7 @@ import java.text.DecimalFormat
 class GeminiService(
     @Value("\${api.gemini.model}") private val modelName: String,
     private val geminiClient: Client,
+    private val objectMapper: ObjectMapper,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -68,23 +71,36 @@ class GeminiService(
         }
     }
 
-    fun getProteinSummary(nutritionData: NutritionResponseDTO): String {
-        logger.info("[GET_PROTEIN_SUMMARY] Generating summary for nutrition data: {}", nutritionData)
+    fun getProteinSummary(nutritionDataJson: String): String {
+        logger.info("[GET_PROTEIN_SUMMARY] Generating summary for nutrition data: {}", nutritionDataJson)
 
-        if (nutritionData.items.isEmpty()) {
-            return "Alimento no encontrado en la base de datos"
-        }
-
-        val totalProtein = nutritionData.items.sumOf { it.proteinG }
-
+        var itemsListString: String
+        var formattedTotalProtein: String
         val df = DecimalFormat("#.#")
         df.roundingMode = RoundingMode.HALF_UP
-        val formattedTotalProtein = df.format(totalProtein)
 
-        val itemsListString =
-            nutritionData.items.joinToString("\n") {
-                "Item: ${it.name}, Protein: ${df.format(it.proteinG)}g"
+        try {
+            val nutritionData: JsonNode = objectMapper.readTree(nutritionDataJson)
+            val items = nutritionData.get("items")
+
+            if (items == null || !items.isArray || items.isEmpty) {
+                itemsListString = ""
+                formattedTotalProtein = "0"
+            } else {
+                val totalProtein = items.sumOf { it.get("protein_g")?.asDouble() ?: 0.0 }
+                formattedTotalProtein = df.format(totalProtein)
+
+                itemsListString =
+                    items.joinToString("\n") { item ->
+                        val proteinG = item.get("protein_g")?.asDouble() ?: 0.0
+                        "Item: ${item.get("name")?.asText() ?: "Unknown"}, Protein: ${df.format(proteinG)}g"
+                    }
             }
+        } catch (e: JsonProcessingException) {
+            logger.error("[GET_PROTEIN_SUMMARY] Error parsing nutrition data JSON: $nutritionDataJson", e)
+            itemsListString = ""
+            formattedTotalProtein = "0"
+        }
 
         val prompt = proteinSummaryPromptTemplate.format(itemsListString, formattedTotalProtein)
 
