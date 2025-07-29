@@ -56,8 +56,8 @@ class GeminiService(
         }
     }
 
-    fun getProteinSummaryInSpanish(proteinAmount: Double): String {
-        logger.info("[GET_PROTEIN_SUMMARY_IN_SPANISH] Generating summary for protein amount: {}", proteinAmount)
+    fun getProteinSummary(proteinAmount: Double): String {
+        logger.info("[GET_PROTEIN_SUMMARY] Generating summary for protein amount: {}", proteinAmount)
 
         val df = DecimalFormat("#.#")
         df.roundingMode = RoundingMode.HALF_UP
@@ -68,13 +68,13 @@ class GeminiService(
         return try {
             val response = geminiClient.models.generateContent(modelName, prompt, null)
             val summary = response.text()?.trim()
-            logger.info("[GET_PROTEIN_SUMMARY_IN_SPANISH] Generated summary from Gemini: {}", summary)
+            logger.info("[GET_PROTEIN_SUMMARY] Generated summary from Gemini: {}", summary)
             if (summary.isNullOrBlank()) {
                 throw IllegalStateException("Gemini API returned an empty or null response for protein summary.")
             }
             summary
         } catch (e: Exception) {
-            logger.error("[GET_PROTEIN_SUMMARY_IN_SPANISH] Error communicating with Gemini API", e)
+            logger.error("[GET_PROTEIN_SUMMARY] Error communicating with Gemini API", e)
             throw RuntimeException("Error generating protein summary with Gemini API.", e)
         }
     }
