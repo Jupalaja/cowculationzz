@@ -32,34 +32,34 @@ class ProteinCountQueryUseCase(
     override fun processMessage(event: MessageReceived) {
         try {
             when (event.messageType) {
-                MessageType.TEXT -> processTextMessage(event)
-                MessageType.VOICE -> processVoiceMessage(event)
+                MessageType.TEXT -> this.processTextMessage(event)
+                MessageType.VOICE -> this.processVoiceMessage(event)
             }
         } catch (e: Exception) {
-            logger.error("Error processing message for chatId: ${event.chatId}", e)
-            messagingOutputPort.sendMessage(MessageResponse(event.chatId, GENERAL_PROCESSING_ERROR))
+            this.logger.error("Error processing message for chatId: ${event.chatId}", e)
+            this.messagingOutputPort.sendMessage(MessageResponse(event.chatId, GENERAL_PROCESSING_ERROR))
         }
     }
 
     private fun processTextMessage(event: MessageReceived) {
         if (event.text.isNullOrBlank()) {
-            logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
-            messagingOutputPort.sendMessage(MessageResponse(event.chatId, BLANK_TEXT_MESSAGE_ERROR))
+            this.logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
+            this.messagingOutputPort.sendMessage(MessageResponse(event.chatId, BLANK_TEXT_MESSAGE_ERROR))
             return
         }
-        processQueryAndRespond(event.chatId, event.text)
+        this.processQueryAndRespond(event.chatId, event.text)
     }
 
     private fun processVoiceMessage(event: MessageReceived) {
         if (event.data == null) {
-            logger.warn("Received a voice message event with null data for chatId: ${event.chatId}")
-            messagingOutputPort.sendMessage(MessageResponse(event.chatId, NULL_VOICE_DATA_ERROR))
+            this.logger.warn("Received a voice message event with null data for chatId: ${event.chatId}")
+            this.messagingOutputPort.sendMessage(MessageResponse(event.chatId, NULL_VOICE_DATA_ERROR))
             return
         }
         val tempAudioFile = event.data.toFile()
         try {
-            val transcribedText = aiModelProcessingPort.transcribeAudio(event.data)
-            processQueryAndRespond(event.chatId, transcribedText)
+            val transcribedText = this.aiModelProcessingPort.transcribeAudio(event.data)
+            this.processQueryAndRespond(event.chatId, transcribedText)
         } finally {
             if (tempAudioFile.exists()) {
                 tempAudioFile.delete()
@@ -72,14 +72,14 @@ class ProteinCountQueryUseCase(
         queryText: String,
     ) {
         val queryPrompt = NATURAL_LANGUAGE_QUERY_PROMPT_TEMPLATE.format(queryText)
-        val processedQuery = aiModelProcessingPort.generateText(queryPrompt)
+        val processedQuery = this.aiModelProcessingPort.generateText(queryPrompt)
 
-        val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
+        val nutritionData = this.calorieNinjasAdapter.getNutritionInfo(processedQuery)
 
-        val summaryPrompt = buildProteinSummaryPrompt(nutritionData)
-        val responseText = aiModelProcessingPort.generateText(summaryPrompt)
+        val summaryPrompt = this.buildProteinSummaryPrompt(nutritionData)
+        val responseText = this.aiModelProcessingPort.generateText(summaryPrompt)
 
-        messagingOutputPort.sendMessage(MessageResponse(chatId, responseText))
+        this.messagingOutputPort.sendMessage(MessageResponse(chatId, responseText))
     }
 
     private fun buildProteinSummaryPrompt(nutritionDataJson: String): String {
@@ -89,7 +89,7 @@ class ProteinCountQueryUseCase(
         df.roundingMode = RoundingMode.HALF_UP
 
         try {
-            val nutritionData: JsonNode = objectMapper.readTree(nutritionDataJson)
+            val nutritionData: JsonNode = this.objectMapper.readTree(nutritionDataJson)
             val items = nutritionData.get("items")
 
             if (items == null || !items.isArray || items.isEmpty) {
@@ -106,7 +106,7 @@ class ProteinCountQueryUseCase(
                     }
             }
         } catch (e: JsonProcessingException) {
-            logger.error("Error parsing nutrition data JSON: $nutritionDataJson", e)
+            this.logger.error("Error parsing nutrition data JSON: $nutritionDataJson", e)
             itemsListString = ""
             formattedTotalProtein = "0"
         }

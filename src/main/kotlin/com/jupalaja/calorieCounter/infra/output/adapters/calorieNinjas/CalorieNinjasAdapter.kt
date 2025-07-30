@@ -24,9 +24,9 @@ class CalorieNinjasAdapter(
             .build()
 
     fun getNutritionInfo(query: String): String {
-        logger.info("[GET_NUTRITION_INFO] Getting nutrition info for query: {}", query)
+        this.logger.info("[GET_NUTRITION_INFO] Getting nutrition info for query: {}", query)
         return try {
-            calorieNinjasWebClient
+            this.calorieNinjasWebClient
                 .get()
                 .uri { uriBuilder ->
                     uriBuilder
@@ -38,7 +38,7 @@ class CalorieNinjasAdapter(
                 .block()
                 ?.takeIf { it.isNotBlank() } ?: throw IllegalStateException("API returned empty or blank body")
         } catch (e: Exception) {
-            logger.error("[GET_NUTRITION_INFO] Error getting nutrition info for query: {}", query, e)
+            this.logger.error("[GET_NUTRITION_INFO] Error getting nutrition info for query: {}", query, e)
             throw RuntimeException("Error fetching data from CalorieNinjas API for query: $query", e)
         }
     }

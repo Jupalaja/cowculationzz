@@ -18,9 +18,9 @@ class TelegramMessageSenderAdapter : MessagingOutputPort {
 
     override fun sendMessage(event: MessageResponse) {
         if (this::bot.isInitialized) {
-            bot.sendMessage(chatId = ChatId.fromId(event.chatId.toLong()), text = event.response)
+            this.bot.sendMessage(chatId = ChatId.fromId(event.chatId.toLong()), text = event.response)
         } else {
-            logger.warn("Bot not initialized, cannot send message to chatId: ${event.chatId}")
+            this.logger.warn("Bot not initialized, cannot send message to chatId: ${event.chatId}")
         }
     }
 }

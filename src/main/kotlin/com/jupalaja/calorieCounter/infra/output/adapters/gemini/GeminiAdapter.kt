@@ -20,30 +20,30 @@ class GeminiAdapter(
     private val geminiClient: Client = Client.builder().apiKey(apiKey).build()
 
     override fun generateText(prompt: String): String {
-        logger.info("[GENERATE_TEXT] Generating text for prompt")
+        this.logger.info("[GENERATE_TEXT] Generating text for prompt")
         if (prompt.isBlank()) {
             throw IllegalArgumentException("Prompt cannot be blank.")
         }
 
         return try {
-            val response = geminiClient.models.generateContent(modelName, prompt, null)
+            val response = this.geminiClient.models.generateContent(this.modelName, prompt, null)
             val text = response.text()?.trim()
-            logger.info("[GENERATE_TEXT] Generated text from Gemini")
+            this.logger.info("[GENERATE_TEXT] Generated text from Gemini")
             if (text.isNullOrBlank()) {
                 throw IllegalStateException("Gemini API returned an empty or null response.")
             }
             text
         } catch (e: Exception) {
-            logger.error("[GENERATE_TEXT] Error communicating with Gemini API", e)
+            this.logger.error("[GENERATE_TEXT] Error communicating with Gemini API", e)
             throw RuntimeException("Error generating text with Gemini API.", e)
         }
     }
 
     override fun transcribeAudio(filePath: Path): String {
-        logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio from path: $filePath")
+        this.logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio from path: $filePath")
         val audioFile = filePath.toFile()
         val mimeType = audioFile.getMimeType()
-        logger.info("[GET_TEXT_FROM_AUDIO] Detected mimeType for ${audioFile.name}: $mimeType")
+        this.logger.info("[GET_TEXT_FROM_AUDIO] Detected mimeType for ${audioFile.name}: $mimeType")
         val audioBytes = audioFile.readBytes()
 
         if (audioBytes.isEmpty()) {
@@ -55,15 +55,15 @@ class GeminiAdapter(
         val content = Content.fromParts(promptPart, audioPart)
 
         return try {
-            val response = geminiClient.models.generateContent(modelName, content, null)
+            val response = this.geminiClient.models.generateContent(this.modelName, content, null)
             val text = response.text()?.trim()
-            logger.info("[GET_TEXT_FROM_AUDIO] Transcribed text from Gemini: {}", text)
+            this.logger.info("[GET_TEXT_FROM_AUDIO] Transcribed text from Gemini: {}", text)
             if (text.isNullOrBlank()) {
                 throw IllegalStateException("Gemini API returned an empty or null response for audio transcription.")
             }
             text
         } catch (e: Exception) {
-            logger.error("[GET_TEXT_FROM_AUDIO] Error communicating with Gemini API for audio transcription", e)
+            this.logger.error("[GET_TEXT_FROM_AUDIO] Error communicating with Gemini API for audio transcription", e)
             throw RuntimeException("Error transcribing audio with Gemini API.", e)
         }
     }

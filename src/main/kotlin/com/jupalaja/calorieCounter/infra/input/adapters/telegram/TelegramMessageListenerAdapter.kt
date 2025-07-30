@@ -34,17 +34,17 @@ class TelegramMessageListenerAdapter(
 
     @PostConstruct
     fun startBot() {
-        if (telegramBotToken.isBlank()) {
-            logger.warn("Telegram bot token is not set. Bot will not start.")
+        if (this.telegramBotToken.isBlank()) {
+            this.logger.warn("Telegram bot token is not set. Bot will not start.")
             return
         }
 
-        bot =
+        this.bot =
             bot {
-                token = telegramBotToken
+                token = this@TelegramMessageListenerAdapter.telegramBotToken
                 dispatch {
                     command("start") {
-                        telegramMessagingAdapter.sendMessage(
+                        this@TelegramMessageListenerAdapter.telegramMessagingAdapter.sendMessage(
                             MessageResponse(
                                 message.chat.id.toString(),
                                 WELCOME_MESSAGE,
@@ -58,7 +58,7 @@ class TelegramMessageListenerAdapter(
                                 text = text,
                                 messageType = MessageType.TEXT,
                             )
-                        messagingInputPort.processMessage(event)
+                        this@TelegramMessageListenerAdapter.messagingInputPort.processMessage(event)
                     }
                     voice {
                         try {
@@ -75,10 +75,10 @@ class TelegramMessageListenerAdapter(
                                         data = tempFile.toPath(),
                                         messageType = MessageType.VOICE,
                                     )
-                                messagingInputPort.processMessage(event)
+                                this@TelegramMessageListenerAdapter.messagingInputPort.processMessage(event)
                             } else {
-                                logger.error("Failed to download voice message with fileId: $voiceFileId")
-                                telegramMessagingAdapter.sendMessage(
+                                this@TelegramMessageListenerAdapter.logger.error("Failed to download voice message with fileId: $voiceFileId")
+                                this@TelegramMessageListenerAdapter.telegramMessagingAdapter.sendMessage(
                                     MessageResponse(
                                         message.chat.id.toString(),
                                         VOICE_MESSAGE_PROCESSING_ERROR,
@@ -86,8 +86,8 @@ class TelegramMessageListenerAdapter(
                                 )
                             }
                         } catch (e: Exception) {
-                            logger.error("Error processing voice message", e)
-                            telegramMessagingAdapter.sendMessage(
+                            this@TelegramMessageListenerAdapter.logger.error("Error processing voice message", e)
+                            this@TelegramMessageListenerAdapter.telegramMessagingAdapter.sendMessage(
                                 MessageResponse(
                                     message.chat.id.toString(),
                                     VOICE_MESSAGE_GENERAL_ERROR,
@@ -98,19 +98,19 @@ class TelegramMessageListenerAdapter(
                 }
             }
 
-        telegramMessagingAdapter.setBot(bot)
+        this.telegramMessagingAdapter.setBot(this.bot)
 
         Thread {
-            bot.startPolling()
+            this.bot.startPolling()
         }.start()
-        logger.info("Telegram bot started polling.")
+        this.logger.info("Telegram bot started polling.")
     }
 
     @PreDestroy
     fun stopBot() {
         if (this::bot.isInitialized) {
-            logger.info("Stopping Telegram bot polling.")
-            bot.stopPolling()
+            this.logger.info("Stopping Telegram bot polling.")
+            this.bot.stopPolling()
         }
     }
 }
