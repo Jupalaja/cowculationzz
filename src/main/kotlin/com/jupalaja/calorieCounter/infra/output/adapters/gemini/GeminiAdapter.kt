@@ -4,7 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.genai.Client
-import com.jupalaja.calorieCounter.infra.output.ports.NaturalLanguageProcessingPort
+import com.google.genai.types.Content
+import com.google.genai.types.Part
+import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -12,11 +14,11 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 
 @Component
-class GeminiTextAdapter(
+class GeminiAdapter(
     @Value("\${api.gemini.model}") private val modelName: String,
     private val geminiClient: Client,
     private val objectMapper: ObjectMapper,
-) : NaturalLanguageProcessingPort {
+) : AIModelProcessingPort {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     private val naturalLanguageQueryPromptTemplate =
@@ -114,6 +116,33 @@ class GeminiTextAdapter(
         } catch (e: Exception) {
             logger.error("[GET_PROTEIN_SUMMARY] Error communicating with Gemini API", e)
             throw RuntimeException("Error generating protein summary with Gemini API.", e)
+        }
+    }
+
+    override fun transcribeAudio(
+        audioBytes: ByteArray,
+        mimeType: String,
+    ): String {
+        logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio of size: ${audioBytes.size} bytes and mimeType: $mimeType")
+        if (audioBytes.isEmpty()) {
+            throw IllegalArgumentException("Audio bytes cannot be empty.")
+        }
+
+        val audioPart = Part.fromBytes(audioBytes, mimeType)
+        val promptPart = Part.fromText("Transcribe this audio message.")
+        val content = Content.fromParts(promptPart, audioPart)
+
+        return try {
+            val response = geminiClient.models.generateContent(modelName, content, null)
+            val text = response.text()?.trim()
+            logger.info("[GET_TEXT_FROM_AUDIO] Transcribed text from Gemini: {}", text)
+            if (text.isNullOrBlank()) {
+                throw IllegalStateException("Gemini API returned an empty or null response for audio transcription.")
+            }
+            text
+        } catch (e: Exception) {
+            logger.error("[GET_TEXT_FROM_AUDIO] Error communicating with Gemini API for audio transcription", e)
+            throw RuntimeException("Error transcribing audio with Gemini API.", e)
         }
     }
 }
