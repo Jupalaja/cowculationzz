@@ -36,14 +36,14 @@ class ProteinCountQueryUseCase(
                 MessageType.VOICE -> this.processVoiceMessage(event)
             }
         } catch (e: Exception) {
-            this.logger.error("Error processing message for chatId: ${event.chatId}", e)
+            this.logger.error("[PROCESS_MESSAGE] Error processing message for chatId: {}", event.chatId, e)
             this.messagingOutputPort.sendMessage(MessageResponse(event.chatId, GENERAL_PROCESSING_ERROR))
         }
     }
 
     private fun processTextMessage(event: MessageReceived) {
         if (event.text.isNullOrBlank()) {
-            this.logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
+            this.logger.warn("[PROCESS_TEXT_MESSAGE] Received a text message event with null or blank text for chatId: {}", event.chatId)
             this.messagingOutputPort.sendMessage(MessageResponse(event.chatId, BLANK_TEXT_MESSAGE_ERROR))
             return
         }
@@ -52,7 +52,7 @@ class ProteinCountQueryUseCase(
 
     private fun processVoiceMessage(event: MessageReceived) {
         if (event.data == null) {
-            this.logger.warn("Received a voice message event with null data for chatId: ${event.chatId}")
+            this.logger.warn("[PROCESS_VOICE_MESSAGE] Received a voice message event with null data for chatId: {}", event.chatId)
             this.messagingOutputPort.sendMessage(MessageResponse(event.chatId, NULL_VOICE_DATA_ERROR))
             return
         }
@@ -106,11 +106,12 @@ class ProteinCountQueryUseCase(
                     }
             }
         } catch (e: JsonProcessingException) {
-            this.logger.error("Error parsing nutrition data JSON: $nutritionDataJson", e)
+            this.logger.error("[BUILD_PROTEIN_SUMMARY_PROMPT] Error parsing nutrition data JSON: {}", nutritionDataJson, e)
             itemsListString = ""
             formattedTotalProtein = "0"
         }
 
-        return PROTEIN_SUMMARY_PROMPT_TEMPLATE.format(itemsListString, formattedTotalProtein)
+        val prompt = PROTEIN_SUMMARY_PROMPT_TEMPLATE.format(itemsListString, formattedTotalProtein)
+        return prompt
     }
 }

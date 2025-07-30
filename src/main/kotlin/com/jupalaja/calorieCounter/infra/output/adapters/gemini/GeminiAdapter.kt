@@ -20,7 +20,6 @@ class GeminiAdapter(
     private val geminiClient: Client = Client.builder().apiKey(apiKey).build()
 
     override fun generateText(prompt: String): String {
-        this.logger.info("[GENERATE_TEXT] Generating text for prompt")
         if (prompt.isBlank()) {
             throw IllegalArgumentException("Prompt cannot be blank.")
         }
@@ -28,7 +27,6 @@ class GeminiAdapter(
         return try {
             val response = this.geminiClient.models.generateContent(this.modelName, prompt, null)
             val text = response.text()?.trim()
-            this.logger.info("[GENERATE_TEXT] Generated text from Gemini")
             if (text.isNullOrBlank()) {
                 throw IllegalStateException("Gemini API returned an empty or null response.")
             }
@@ -40,10 +38,8 @@ class GeminiAdapter(
     }
 
     override fun transcribeAudio(filePath: Path): String {
-        this.logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio from path: $filePath")
         val audioFile = filePath.toFile()
         val mimeType = audioFile.getMimeType()
-        this.logger.info("[GET_TEXT_FROM_AUDIO] Detected mimeType for ${audioFile.name}: $mimeType")
         val audioBytes = audioFile.readBytes()
 
         if (audioBytes.isEmpty()) {
@@ -57,13 +53,12 @@ class GeminiAdapter(
         return try {
             val response = this.geminiClient.models.generateContent(this.modelName, content, null)
             val text = response.text()?.trim()
-            this.logger.info("[GET_TEXT_FROM_AUDIO] Transcribed text from Gemini: {}", text)
             if (text.isNullOrBlank()) {
                 throw IllegalStateException("Gemini API returned an empty or null response for audio transcription.")
             }
             text
         } catch (e: Exception) {
-            this.logger.error("[GET_TEXT_FROM_AUDIO] Error communicating with Gemini API for audio transcription", e)
+            this.logger.error("[TRANSCRIBE_AUDIO] Error communicating with Gemini API for audio transcription", e)
             throw RuntimeException("Error transcribing audio with Gemini API.", e)
         }
     }

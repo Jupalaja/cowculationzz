@@ -23,23 +23,22 @@ class CalorieNinjasAdapter(
             .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .build()
 
-    fun getNutritionInfo(query: String): String {
-        this.logger.info("[GET_NUTRITION_INFO] Getting nutrition info for query: {}", query)
-        return try {
-            this.calorieNinjasWebClient
-                .get()
-                .uri { uriBuilder ->
-                    uriBuilder
-                        .path("nutrition")
-                        .queryParam("query", query)
-                        .build()
-                }.retrieve()
-                .bodyToMono<String>()
-                .block()
-                ?.takeIf { it.isNotBlank() } ?: throw IllegalStateException("API returned empty or blank body")
+    fun getNutritionInfo(query: String): String =
+        try {
+            val response =
+                this.calorieNinjasWebClient
+                    .get()
+                    .uri { uriBuilder ->
+                        uriBuilder
+                            .path("nutrition")
+                            .queryParam("query", query)
+                            .build()
+                    }.retrieve()
+                    .bodyToMono<String>()
+                    .block()
+            response?.takeIf { it.isNotBlank() } ?: throw IllegalStateException("API returned empty or blank body")
         } catch (e: Exception) {
-            this.logger.error("[GET_NUTRITION_INFO] Error getting nutrition info for query: {}", query, e)
+            this.logger.error("[GET_NUTRITION_INFO] Error fetching nutrition info for query: {}", query, e)
             throw RuntimeException("Error fetching data from CalorieNinjas API for query: $query", e)
         }
-    }
 }
