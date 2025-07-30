@@ -1,4 +1,4 @@
-package com.jupalaja.calorieCounter.infra.input.adapters.http
+package com.jupalaja.calorieCounter.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
