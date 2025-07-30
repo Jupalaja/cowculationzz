@@ -9,7 +9,7 @@ import com.google.genai.types.Part
 import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
 import com.jupalaja.calorieCounter.shared.constants.MessageConstants.NATURAL_LANGUAGE_QUERY_PROMPT_TEMPLATE
 import com.jupalaja.calorieCounter.shared.constants.MessageConstants.PROTEIN_SUMMARY_PROMPT_TEMPLATE
-import com.jupalaja.calorieCounter.utils.getMimeType
+import com.jupalaja.calorieCounter.shared.utils.getMimeType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component

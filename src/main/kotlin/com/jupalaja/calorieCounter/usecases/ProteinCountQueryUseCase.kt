@@ -29,14 +29,14 @@ class ProteinCountQueryUseCase(
             }
         } catch (e: Exception) {
             logger.error("Error processing message for chatId: ${event.chatId}", e)
-            messagingOutputPort.sendErrorMessage(event.chatId, GENERAL_PROCESSING_ERROR)
+            messagingOutputPort.sendMessage(MessageResponse(event.chatId, GENERAL_PROCESSING_ERROR))
         }
     }
 
     private fun processTextMessage(event: MessageReceived) {
         if (event.text == null || event.text.isBlank()) {
             logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
-            messagingOutputPort.sendErrorMessage(event.chatId, BLANK_TEXT_MESSAGE_ERROR)
+            messagingOutputPort.sendMessage(MessageResponse(event.chatId, BLANK_TEXT_MESSAGE_ERROR))
             return
         }
         val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(event.text)
@@ -49,7 +49,7 @@ class ProteinCountQueryUseCase(
     private fun processVoiceMessage(event: MessageReceived) {
         if (event.data == null) {
             logger.warn("Received a voice message event with null data for chatId: ${event.chatId}")
-            messagingOutputPort.sendErrorMessage(event.chatId, NULL_VOICE_DATA_ERROR)
+            messagingOutputPort.sendMessage(MessageResponse(event.chatId, NULL_VOICE_DATA_ERROR))
             return
         }
         val tempAudioFile = event.data.toFile()

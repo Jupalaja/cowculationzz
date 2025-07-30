@@ -7,11 +7,13 @@ import com.github.kotlintelegrambot.dispatcher.command
 import com.github.kotlintelegrambot.dispatcher.text
 import com.github.kotlintelegrambot.dispatcher.voice
 import com.jupalaja.calorieCounter.domain.dto.MessageReceived
+import com.jupalaja.calorieCounter.domain.dto.MessageResponse
 import com.jupalaja.calorieCounter.domain.enums.MessageType
 import com.jupalaja.calorieCounter.infra.input.ports.MessagingInputPort
 import com.jupalaja.calorieCounter.infra.output.adapters.telegram.TelegramMessageSenderAdapter
 import com.jupalaja.calorieCounter.shared.constants.MessageConstants.VOICE_MESSAGE_GENERAL_ERROR
 import com.jupalaja.calorieCounter.shared.constants.MessageConstants.VOICE_MESSAGE_PROCESSING_ERROR
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.WELCOME_MESSAGE
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
@@ -40,7 +42,12 @@ class TelegramMessageListenerAdapter(
                 token = telegramBotToken
                 dispatch {
                     command("start") {
-                        telegramMessagingAdapter.sendWelcomeMessage(message.chat.id.toString())
+                        telegramMessagingAdapter.sendMessage(
+                            MessageResponse(
+                                message.chat.id.toString(),
+                                WELCOME_MESSAGE,
+                            ),
+                        )
                     }
                     text {
                         val event =
@@ -69,16 +76,20 @@ class TelegramMessageListenerAdapter(
                                 messagingInputPort.processMessage(event)
                             } else {
                                 logger.error("Failed to download voice message with fileId: $voiceFileId")
-                                telegramMessagingAdapter.sendErrorMessage(
-                                    message.chat.id.toString(),
-                                    VOICE_MESSAGE_PROCESSING_ERROR,
+                                telegramMessagingAdapter.sendMessage(
+                                    MessageResponse(
+                                        message.chat.id.toString(),
+                                        VOICE_MESSAGE_PROCESSING_ERROR,
+                                    ),
                                 )
                             }
                         } catch (e: Exception) {
                             logger.error("Error processing voice message", e)
-                            telegramMessagingAdapter.sendErrorMessage(
-                                message.chat.id.toString(),
-                                VOICE_MESSAGE_GENERAL_ERROR,
+                            telegramMessagingAdapter.sendMessage(
+                                MessageResponse(
+                                    message.chat.id.toString(),
+                                    VOICE_MESSAGE_GENERAL_ERROR,
+                                ),
                             )
                         }
                     }
@@ -95,7 +106,7 @@ class TelegramMessageListenerAdapter(
 
     @PreDestroy
     fun stopBot() {
-        if (::bot.isInitialized) {
+        if (this::bot.isInitialized) {
             logger.info("Stopping Telegram bot polling.")
             bot.stopPolling()
         }

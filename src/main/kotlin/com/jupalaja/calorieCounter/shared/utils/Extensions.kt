@@ -1,4 +1,4 @@
-package com.jupalaja.calorieCounter.utils
+package com.jupalaja.calorieCounter.shared.utils
 
 import java.io.File
 import java.nio.file.Files
