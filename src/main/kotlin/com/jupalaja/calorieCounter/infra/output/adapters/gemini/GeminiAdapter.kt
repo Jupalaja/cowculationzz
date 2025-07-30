@@ -16,10 +16,12 @@ import java.text.DecimalFormat
 @Component
 class GeminiAdapter(
     @Value("\${api.gemini.model}") private val modelName: String,
-    private val geminiClient: Client,
+    @Value("\${api.gemini.key}") apiKey: String,
     private val objectMapper: ObjectMapper,
 ) : AIModelProcessingPort {
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    private val geminiClient: Client = Client.builder().apiKey(apiKey).build()
 
     private val naturalLanguageQueryPromptTemplate =
         """
