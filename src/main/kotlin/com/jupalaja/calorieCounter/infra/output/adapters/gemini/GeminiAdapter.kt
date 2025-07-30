@@ -7,6 +7,8 @@ import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.Part
 import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.NATURAL_LANGUAGE_QUERY_PROMPT_TEMPLATE
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.PROTEIN_SUMMARY_PROMPT_TEMPLATE
 import com.jupalaja.calorieCounter.utils.getMimeType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -25,42 +27,12 @@ class GeminiAdapter(
 
     private val geminiClient: Client = Client.builder().apiKey(apiKey).build()
 
-    private val naturalLanguageQueryPromptTemplate =
-        """
-        Summarize the following user request into a simple query in English for a nutrition API.
-        The user wants to know the nutritional information of some food.
-        Extract the food items and quantities, and translate them to English.
-        For example, if the user asks 'what are the calories in 3 boiled eggs and a slice of bread', the output should be '3 boiled eggs and a slice of bread'.
-        If the user asks in another language, for example 'me comí 2 manzanas y una banana', the output should be '2 apples and a banana'.
-        Another example, if the user asks 'me comi un pan grande, de media libra', the output should be 'half a pound of large bread'.
-        Only return the query, with no other text, explanation, or formatting.
-        The user request is: "%s"
-        """.trimIndent()
-
-    private val proteinSummaryPromptTemplate =
-        """
-        Generate a summary in Spanish for the provided list of foods and their protein content.
-        The summary should start with "Claro, éste es el resumen".
-        Then, list each food item with its protein content on a new line, using a bullet point. For example: "- La pechuga de pollo contiene 50g de proteína".
-        After the list, add a blank line.
-        Finally, add a sentence with the total protein amount. For example: "En total estarías consumiendo 60g de proteína".
-
-        If the list of items is empty or the total protein is 0, the response should be "Los alimentos que proporcionaste no parecen contener proteínas."
-
-        Here is the list of food items and their protein content:
-        %s
-
-        The total protein is %sg.
-
-        Only return the final formatted text. Do not add any other explanations or formatting.
-        """.trimIndent()
-
     override fun extractQueryFromNaturalLanguage(naturalLanguageQuery: String): String {
         logger.info("[GET_QUERY_FROM_NATURAL_LANGUAGE] Processing natural language query: {}", naturalLanguageQuery)
         if (naturalLanguageQuery.isBlank()) {
             throw IllegalArgumentException("Query cannot be blank.")
         }
-        val prompt = naturalLanguageQueryPromptTemplate.format(naturalLanguageQuery)
+        val prompt = NATURAL_LANGUAGE_QUERY_PROMPT_TEMPLATE.format(naturalLanguageQuery)
 
         return try {
             val response = geminiClient.models.generateContent(modelName, prompt, null)
@@ -107,7 +79,7 @@ class GeminiAdapter(
             formattedTotalProtein = "0"
         }
 
-        val prompt = proteinSummaryPromptTemplate.format(itemsListString, formattedTotalProtein)
+        val prompt = PROTEIN_SUMMARY_PROMPT_TEMPLATE.format(itemsListString, formattedTotalProtein)
 
         return try {
             val response = geminiClient.models.generateContent(modelName, prompt, null)

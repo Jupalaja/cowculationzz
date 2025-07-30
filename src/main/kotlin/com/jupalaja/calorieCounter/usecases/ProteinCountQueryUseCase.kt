@@ -7,6 +7,9 @@ import com.jupalaja.calorieCounter.infra.input.ports.MessagingInputPort
 import com.jupalaja.calorieCounter.infra.output.adapters.calorieNinjas.CalorieNinjasAdapter
 import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
 import com.jupalaja.calorieCounter.infra.output.ports.MessagingOutputPort
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.BLANK_TEXT_MESSAGE_ERROR
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.GENERAL_PROCESSING_ERROR
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.NULL_VOICE_DATA_ERROR
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -26,14 +29,14 @@ class ProteinCountQueryUseCase(
             }
         } catch (e: Exception) {
             logger.error("Error processing message for chatId: ${event.chatId}", e)
-            messagingOutputPort.sendErrorMessage(event.chatId, "Sorry, an error occurred while processing your request.")
+            messagingOutputPort.sendErrorMessage(event.chatId, GENERAL_PROCESSING_ERROR)
         }
     }
 
     private fun processTextMessage(event: MessageReceived) {
         if (event.text == null || event.text.isBlank()) {
             logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
-            messagingOutputPort.sendErrorMessage(event.chatId, "Sorry, I couldn't understand your message. Please try sending it again.")
+            messagingOutputPort.sendErrorMessage(event.chatId, BLANK_TEXT_MESSAGE_ERROR)
             return
         }
         val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(event.text)
@@ -46,7 +49,7 @@ class ProteinCountQueryUseCase(
     private fun processVoiceMessage(event: MessageReceived) {
         if (event.data == null) {
             logger.warn("Received a voice message event with null data for chatId: ${event.chatId}")
-            messagingOutputPort.sendErrorMessage(event.chatId, "Sorry, I had trouble processing your voice message. Please try again.")
+            messagingOutputPort.sendErrorMessage(event.chatId, NULL_VOICE_DATA_ERROR)
             return
         }
         val tempAudioFile = event.data.toFile()

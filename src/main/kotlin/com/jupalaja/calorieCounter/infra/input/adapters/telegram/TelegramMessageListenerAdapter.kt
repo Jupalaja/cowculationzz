@@ -10,6 +10,8 @@ import com.jupalaja.calorieCounter.domain.dto.MessageReceived
 import com.jupalaja.calorieCounter.domain.enums.MessageType
 import com.jupalaja.calorieCounter.infra.input.ports.MessagingInputPort
 import com.jupalaja.calorieCounter.infra.output.adapters.telegram.TelegramMessageSenderAdapter
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.VOICE_MESSAGE_GENERAL_ERROR
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.VOICE_MESSAGE_PROCESSING_ERROR
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
@@ -69,14 +71,14 @@ class TelegramMessageListenerAdapter(
                                 logger.error("Failed to download voice message with fileId: $voiceFileId")
                                 telegramMessagingAdapter.sendErrorMessage(
                                     message.chat.id.toString(),
-                                    "Sorry, I couldn't process your voice message.",
+                                    VOICE_MESSAGE_PROCESSING_ERROR,
                                 )
                             }
                         } catch (e: Exception) {
                             logger.error("Error processing voice message", e)
                             telegramMessagingAdapter.sendErrorMessage(
                                 message.chat.id.toString(),
-                                "Sorry, an error occurred while processing your voice message.",
+                                VOICE_MESSAGE_GENERAL_ERROR,
                             )
                         }
                     }

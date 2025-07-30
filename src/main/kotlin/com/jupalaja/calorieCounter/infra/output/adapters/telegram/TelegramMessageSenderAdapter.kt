@@ -4,6 +4,7 @@ import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.entities.ChatId
 import com.jupalaja.calorieCounter.domain.dto.MessageResponse
 import com.jupalaja.calorieCounter.infra.output.ports.MessagingOutputPort
+import com.jupalaja.calorieCounter.shared.constants.MessageConstants.WELCOME_MESSAGE
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -25,8 +26,7 @@ class TelegramMessageSenderAdapter : MessagingOutputPort {
     }
 
     override fun sendWelcomeMessage(chatId: String) {
-        val welcomeMessage = "Hello! I can help you with nutrition information. Just send me what you ate and I'll tell you the total protein."
-        sendMessage(MessageResponse(chatId, welcomeMessage))
+        sendMessage(MessageResponse(chatId, WELCOME_MESSAGE))
     }
 
     override fun sendErrorMessage(
