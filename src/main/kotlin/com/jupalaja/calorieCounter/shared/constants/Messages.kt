@@ -1,6 +1,6 @@
 package com.jupalaja.calorieCounter.shared.constants
 
-object MessageConstants {
+object Messages {
     // Welcome message
     const val WELCOME_MESSAGE =
         "Hello! I can help you with nutrition information. Just send me what you ate and " +

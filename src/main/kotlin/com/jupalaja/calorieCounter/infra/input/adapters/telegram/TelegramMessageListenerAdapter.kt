@@ -11,17 +11,19 @@ import com.jupalaja.calorieCounter.domain.dto.MessageResponse
 import com.jupalaja.calorieCounter.domain.enums.MessageType
 import com.jupalaja.calorieCounter.infra.input.ports.MessagingInputPort
 import com.jupalaja.calorieCounter.infra.output.adapters.telegram.TelegramMessageSenderAdapter
-import com.jupalaja.calorieCounter.shared.constants.MessageConstants.VOICE_MESSAGE_GENERAL_ERROR
-import com.jupalaja.calorieCounter.shared.constants.MessageConstants.VOICE_MESSAGE_PROCESSING_ERROR
-import com.jupalaja.calorieCounter.shared.constants.MessageConstants.WELCOME_MESSAGE
+import com.jupalaja.calorieCounter.shared.constants.Messages.VOICE_MESSAGE_GENERAL_ERROR
+import com.jupalaja.calorieCounter.shared.constants.Messages.VOICE_MESSAGE_PROCESSING_ERROR
+import com.jupalaja.calorieCounter.shared.constants.Messages.WELCOME_MESSAGE
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import java.io.File
 
 @Component
+@Primary
 class TelegramMessageListenerAdapter(
     private val messagingInputPort: MessagingInputPort,
     private val telegramMessagingAdapter: TelegramMessageSenderAdapter,

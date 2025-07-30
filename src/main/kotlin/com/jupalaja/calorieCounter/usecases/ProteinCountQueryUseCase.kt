@@ -1,5 +1,8 @@
 package com.jupalaja.calorieCounter.usecases
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.jupalaja.calorieCounter.domain.dto.MessageReceived
 import com.jupalaja.calorieCounter.domain.dto.MessageResponse
 import com.jupalaja.calorieCounter.domain.enums.MessageType
@@ -7,17 +10,22 @@ import com.jupalaja.calorieCounter.infra.input.ports.MessagingInputPort
 import com.jupalaja.calorieCounter.infra.output.adapters.calorieNinjas.CalorieNinjasAdapter
 import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
 import com.jupalaja.calorieCounter.infra.output.ports.MessagingOutputPort
-import com.jupalaja.calorieCounter.shared.constants.MessageConstants.BLANK_TEXT_MESSAGE_ERROR
-import com.jupalaja.calorieCounter.shared.constants.MessageConstants.GENERAL_PROCESSING_ERROR
-import com.jupalaja.calorieCounter.shared.constants.MessageConstants.NULL_VOICE_DATA_ERROR
+import com.jupalaja.calorieCounter.shared.constants.Messages.BLANK_TEXT_MESSAGE_ERROR
+import com.jupalaja.calorieCounter.shared.constants.Messages.GENERAL_PROCESSING_ERROR
+import com.jupalaja.calorieCounter.shared.constants.Messages.NATURAL_LANGUAGE_QUERY_PROMPT_TEMPLATE
+import com.jupalaja.calorieCounter.shared.constants.Messages.NULL_VOICE_DATA_ERROR
+import com.jupalaja.calorieCounter.shared.constants.Messages.PROTEIN_SUMMARY_PROMPT_TEMPLATE
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 @Service
 class ProteinCountQueryUseCase(
     private val aiModelProcessingPort: AIModelProcessingPort,
     private val messagingOutputPort: MessagingOutputPort,
     private val calorieNinjasAdapter: CalorieNinjasAdapter,
+    private val objectMapper: ObjectMapper,
 ) : MessagingInputPort {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -34,16 +42,12 @@ class ProteinCountQueryUseCase(
     }
 
     private fun processTextMessage(event: MessageReceived) {
-        if (event.text == null || event.text.isBlank()) {
+        if (event.text.isNullOrBlank()) {
             logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
             messagingOutputPort.sendMessage(MessageResponse(event.chatId, BLANK_TEXT_MESSAGE_ERROR))
             return
         }
-        val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(event.text)
-        val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
-        val responseText = aiModelProcessingPort.generateProteinSummary(nutritionData)
-
-        messagingOutputPort.sendMessage(MessageResponse(event.chatId, responseText))
+        processQueryAndRespond(event.chatId, event.text)
     }
 
     private fun processVoiceMessage(event: MessageReceived) {
@@ -55,15 +59,58 @@ class ProteinCountQueryUseCase(
         val tempAudioFile = event.data.toFile()
         try {
             val transcribedText = aiModelProcessingPort.transcribeAudio(event.data)
-            val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(transcribedText)
-            val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
-            val responseText = aiModelProcessingPort.generateProteinSummary(nutritionData)
-
-            messagingOutputPort.sendMessage(MessageResponse(event.chatId, responseText))
+            processQueryAndRespond(event.chatId, transcribedText)
         } finally {
             if (tempAudioFile.exists()) {
                 tempAudioFile.delete()
             }
         }
+    }
+
+    private fun processQueryAndRespond(
+        chatId: String,
+        queryText: String,
+    ) {
+        val queryPrompt = NATURAL_LANGUAGE_QUERY_PROMPT_TEMPLATE.format(queryText)
+        val processedQuery = aiModelProcessingPort.generateText(queryPrompt)
+
+        val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
+
+        val summaryPrompt = buildProteinSummaryPrompt(nutritionData)
+        val responseText = aiModelProcessingPort.generateText(summaryPrompt)
+
+        messagingOutputPort.sendMessage(MessageResponse(chatId, responseText))
+    }
+
+    private fun buildProteinSummaryPrompt(nutritionDataJson: String): String {
+        var itemsListString: String
+        var formattedTotalProtein: String
+        val df = DecimalFormat("#.#")
+        df.roundingMode = RoundingMode.HALF_UP
+
+        try {
+            val nutritionData: JsonNode = objectMapper.readTree(nutritionDataJson)
+            val items = nutritionData.get("items")
+
+            if (items == null || !items.isArray || items.isEmpty) {
+                itemsListString = ""
+                formattedTotalProtein = "0"
+            } else {
+                val totalProtein = items.sumOf { it.get("protein_g")?.asDouble() ?: 0.0 }
+                formattedTotalProtein = df.format(totalProtein)
+
+                itemsListString =
+                    items.joinToString("\n") { item ->
+                        val proteinG = item.get("protein_g")?.asDouble() ?: 0.0
+                        "Item: ${item.get("name")?.asText() ?: "Unknown"}, Protein: ${df.format(proteinG)}g"
+                    }
+            }
+        } catch (e: JsonProcessingException) {
+            logger.error("Error parsing nutrition data JSON: $nutritionDataJson", e)
+            itemsListString = ""
+            formattedTotalProtein = "0"
+        }
+
+        return PROTEIN_SUMMARY_PROMPT_TEMPLATE.format(itemsListString, formattedTotalProtein)
     }
 }
