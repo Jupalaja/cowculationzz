@@ -1,3 +1,6 @@
 package com.jupalaja.calorieCounter.utils
 
-// Add extension functions here
+import java.io.File
+import java.nio.file.Files
+
+fun File.getMimeType(): String = Files.probeContentType(this.toPath())

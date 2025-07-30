@@ -9,7 +9,6 @@ import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
 import com.jupalaja.calorieCounter.infra.output.ports.MessagingOutputPort
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Service
 class ProteinCountQueryUseCase(
@@ -32,7 +31,12 @@ class ProteinCountQueryUseCase(
     }
 
     private fun processTextMessage(event: MessageReceived) {
-        val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(event.message)
+        if (event.text == null || event.text.isBlank()) {
+            logger.warn("Received a text message event with null or blank text for chatId: ${event.chatId}")
+            messagingOutputPort.sendErrorMessage(event.chatId, "Sorry, I couldn't understand your message. Please try sending it again.")
+            return
+        }
+        val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(event.text)
         val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
         val responseText = aiModelProcessingPort.generateProteinSummary(nutritionData)
 
@@ -40,19 +44,23 @@ class ProteinCountQueryUseCase(
     }
 
     private fun processVoiceMessage(event: MessageReceived) {
-        val parts = event.message.split("|")
-        if (parts.size != 2) {
-            throw IllegalArgumentException("Invalid voice message format")
+        if (event.data == null) {
+            logger.warn("Received a voice message event with null data for chatId: ${event.chatId}")
+            messagingOutputPort.sendErrorMessage(event.chatId, "Sorry, I had trouble processing your voice message. Please try again.")
+            return
         }
+        val tempAudioFile = event.data.toFile()
+        try {
+            val transcribedText = aiModelProcessingPort.transcribeAudio(event.data)
+            val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(transcribedText)
+            val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
+            val responseText = aiModelProcessingPort.generateProteinSummary(nutritionData)
 
-        val audioBytes = Base64.getDecoder().decode(parts[0])
-        val mimeType = parts[1]
-
-        val transcribedText = aiModelProcessingPort.transcribeAudio(audioBytes, mimeType)
-        val processedQuery = aiModelProcessingPort.extractQueryFromNaturalLanguage(transcribedText)
-        val nutritionData = calorieNinjasAdapter.getNutritionInfo(processedQuery)
-        val responseText = aiModelProcessingPort.generateProteinSummary(nutritionData)
-
-        messagingOutputPort.sendMessage(MessageResponse(event.chatId, responseText))
+            messagingOutputPort.sendMessage(MessageResponse(event.chatId, responseText))
+        } finally {
+            if (tempAudioFile.exists()) {
+                tempAudioFile.delete()
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.jupalaja.calorieCounter.infra.input.adapters.telegram
 
+import com.github.kotlintelegrambot.Bot
 import com.github.kotlintelegrambot.bot
 import com.github.kotlintelegrambot.dispatch
 import com.github.kotlintelegrambot.dispatcher.command
@@ -14,7 +15,7 @@ import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.Base64
+import java.io.File
 
 @Component
 class TelegramMessageListenerAdapter(
@@ -23,11 +24,11 @@ class TelegramMessageListenerAdapter(
     @Value("\${api.telegram.token}") private val telegramBotToken: String,
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
-    private lateinit var bot: com.github.kotlintelegrambot.Bot
+    private lateinit var bot: Bot
 
     @PostConstruct
     fun startBot() {
-        if (telegramBotToken.isBlank() || telegramBotToken == "\${TELEGRAM_BOT_TOKEN}") {
+        if (telegramBotToken.isBlank()) {
             logger.warn("Telegram bot token is not set. Bot will not start.")
             return
         }
@@ -43,7 +44,7 @@ class TelegramMessageListenerAdapter(
                         val event =
                             MessageReceived(
                                 chatId = message.chat.id.toString(),
-                                message = text,
+                                text = text,
                                 messageType = MessageType.TEXT,
                             )
                         messagingInputPort.processMessage(event)
@@ -51,15 +52,16 @@ class TelegramMessageListenerAdapter(
                     voice {
                         try {
                             val voiceFileId = media.fileId
-                            val mimeType = media.mimeType ?: "audio/ogg"
                             val fileBytes = bot.downloadFileBytes(voiceFileId)
+
                             if (fileBytes != null) {
-                                // This is a simplified approach - in production you might want to use a proper serialization
-                                val serializedAudioData = "${Base64.getEncoder().encodeToString(fileBytes)}|$mimeType"
+                                val tempFile = File.createTempFile("voice-", ".ogg")
+                                tempFile.writeBytes(fileBytes)
+
                                 val event =
                                     MessageReceived(
                                         chatId = message.chat.id.toString(),
-                                        message = serializedAudioData,
+                                        data = tempFile.toPath(),
                                         messageType = MessageType.VOICE,
                                     )
                                 messagingInputPort.processMessage(event)

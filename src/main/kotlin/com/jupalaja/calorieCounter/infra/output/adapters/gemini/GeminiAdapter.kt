@@ -7,10 +7,12 @@ import com.google.genai.Client
 import com.google.genai.types.Content
 import com.google.genai.types.Part
 import com.jupalaja.calorieCounter.infra.output.ports.AIModelProcessingPort
+import com.jupalaja.calorieCounter.utils.getMimeType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.math.RoundingMode
+import java.nio.file.Path
 import java.text.DecimalFormat
 
 @Component
@@ -121,13 +123,15 @@ class GeminiAdapter(
         }
     }
 
-    override fun transcribeAudio(
-        audioBytes: ByteArray,
-        mimeType: String,
-    ): String {
-        logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio of size: ${audioBytes.size} bytes and mimeType: $mimeType")
+    override fun transcribeAudio(filePath: Path): String {
+        logger.info("[GET_TEXT_FROM_AUDIO] Transcribing audio from path: $filePath")
+        val audioFile = filePath.toFile()
+        val mimeType = audioFile.getMimeType()
+        logger.info("[GET_TEXT_FROM_AUDIO] Detected mimeType for ${audioFile.name}: $mimeType")
+        val audioBytes = audioFile.readBytes()
+
         if (audioBytes.isEmpty()) {
-            throw IllegalArgumentException("Audio bytes cannot be empty.")
+            throw IllegalArgumentException("Audio file is empty.")
         }
 
         val audioPart = Part.fromBytes(audioBytes, mimeType)
